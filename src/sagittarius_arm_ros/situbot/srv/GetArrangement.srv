@@ -1,0 +1,5 @@
+string situation
+---
+situbot/ArrangementPlan plan
+bool success
+string error

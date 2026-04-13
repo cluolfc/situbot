@@ -1,0 +1,114 @@
+# SituBot Configuration
+# =====================
+
+# LLM Configuration (DashScope / Qwen)
+# Endpoint is OpenAI-compatible. Model names auto-resolve to latest version.
+# Current flagship lineup (as of 2026-04):
+#   qwen-max       → Qwen3-Max     (strongest, 262K context, ¥2.5/M input)
+#   qwen-plus      → Qwen3.5-Plus  (balanced, 1M context, ¥0.8/M input)
+#   qwen-turbo     → Qwen3.5-Flash (cheapest, 1M context, ¥0.2/M input)
+# For explicit version pinning, use e.g. "qwen-max-2025-01-25"
+#
+# === LOCAL MODEL EXAMPLES (Ollama / vLLM) ===
+# If using Ollama (recommended for local deployment):
+#   1. Install: curl -fsSL https://ollama.com/install.sh | sh
+#   2. Pull model: ollama pull qwen3:8b  (or qwen3:14b, qwen2.5:7b, etc.)
+#   3. Ollama serves an OpenAI-compatible endpoint at http://localhost:11434/v1
+#   llm:
+#     endpoint: "http://localhost:11434/v1"
+#     api_key: "ollama"              # Ollama ignores the key but the field is required
+#     model: "qwen3:8b"              # Must match the model name from 'ollama list'
+#     temperature: 0.3
+#     max_tokens: 2048
+#     timeout: 120                   # Local models are slower, increase timeout
+#
+# If using vLLM (better throughput, recommended for batch evaluation):
+#   1. Install: pip install vllm
+#   2. Launch: python -m vllm.entrypoints.openai.api_server \
+#                --model Qwen/Qwen2.5-7B-Instruct --port 8000
+#   llm:
+#     endpoint: "http://localhost:8000/v1"
+#     api_key: "not-needed"
+#     model: "Qwen/Qwen2.5-7B-Instruct"
+#     temperature: 0.3
+#     max_tokens: 2048
+#     timeout: 120
+#
+# If using CUHK(SZ) HPC with Slurm + vLLM:
+#   1. Request GPU node: srun --gres=gpu:1 --pty bash
+#   2. Launch vLLM server on the allocated node
+#   3. Set endpoint to http://<node-hostname>:8000/v1
+#   Note: check GPU type (A100/V100) and available VRAM for model size selection:
+#     - 7B models: ~16GB VRAM (V100 32GB or A100 40GB)
+#     - 14B models: ~28GB VRAM (A100 40GB)
+#     - 72B models: need multi-GPU (A100 80GB × 2+)
+# ============================================
+
+llm:
+  endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  api_key: "sk-REPLACE_WITH_YOUR_KEY"
+  model: "qwen-plus"  # Qwen3.5-Plus: good balance of reasoning + cost for 3-stage chain
+  temperature: 0.3
+  max_tokens: 2048
+  timeout: 30  # seconds
+
+# Evaluator LLM (separate model to avoid self-bias in roundtrip test)
+# Use a DIFFERENT model from the reasoning LLM to avoid self-evaluation bias.
+# If using local models, run two different models or sizes, e.g.:
+#   reasoning: qwen3:8b  |  evaluator: qwen2.5:14b (or vice versa)
+evaluator_llm:
+  endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  api_key: "sk-REPLACE_WITH_YOUR_KEY"
+  model: "qwen-max"  # Qwen3-Max: strongest reasoning, used as blind evaluator
+  temperature: 0.0
+  max_tokens: 1024
+
+# Perception
+perception:
+  camera_topic: "/camera/color/image_raw"
+  detection_model: "yolo_world"  # or "grounding_dino"
+  confidence_threshold: 0.3
+  nms_threshold: 0.5
+  min_bbox_area: 400  # reject tiny boxes that are usually noise
+  max_detections_per_class: 3
+  debug_visualization: true
+  coordinate_mapping_mode: "vision_config_linear"  # or "workspace_linear"
+  vision_config_file: ""  # set in launch to the calibrated sagittarius vision_config.yaml
+
+# Workspace Bounds (meters, in robot base frame)
+workspace:
+  table:
+    x_min: 0.15
+    x_max: 0.45
+    y_min: -0.20
+    y_max: 0.20
+    z_surface: 0.02  # table surface height relative to robot base
+  grid_resolution: 0.05  # for discretised placement
+
+# Gripper (values from sgr_ctrl.py MoveItSGRTool)
+# Open: joint target [0.0, 0.0]  |  Close: joint target [-0.021, -0.021]
+# EE grasp offset: -0.07m along local x (wrist to fingertip)
+gripper:
+  approach_height: 0.04  # from sgr_ctrl.py: z + 0.04 before descend
+  lift_height: 0.08  # from sgr_ctrl.py: z + 0.08 after grasp
+
+# MoveIt (from sagittarius_perception/sgr_ctrl.py)
+moveit:
+  planning_group: "sagittarius_arm"
+  gripper_group: "sagittarius_gripper"
+  # end_effector_link auto-detected via MoveGroupCommander.get_end_effector_link()
+  planning_time: 5.0
+  num_planning_attempts: 10
+  goal_position_tolerance: 0.001  # from sgr_ctrl.py
+  goal_orientation_tolerance: 0.001  # from sgr_ctrl.py
+  max_velocity_scaling: 0.5  # from sgr_ctrl.py
+  max_acceleration_scaling: 0.5  # from sgr_ctrl.py
+
+# Home position: uses SRDF named target 'home' (no joint values needed)
+# Sleep position also available: SRDF named target 'sleep'
+
+# Evaluation
+evaluation:
+  num_candidates: 5  # number of candidate situations in roundtrip test
+  save_photos: true
+  results_dir: "$(find situbot)/results"

@@ -1,0 +1,94 @@
+<launch>
+  <!-- SituBot Full Pipeline: Perception + Reasoning + Planning + Execution -->
+  <!-- Usage: roslaunch situbot situbot_full.launch api_key:=sk-xxx -->
+
+  <arg name="api_key" default="" />
+  <arg name="model" default="qwen-plus" />
+  <arg name="eval_model" default="qwen-max" />
+  <arg name="config_dir" default="$(find situbot)/config" />
+  <arg name="coordinate_mapping_mode" default="vision_config_linear" />
+  <arg name="vision_config_file" default="$(find sagittarius_object_color_detector)/config/vision_config.yaml" />
+
+  <!-- Load shared parameters -->
+  <rosparam file="$(arg config_dir)/situbot_params.yaml" command="load" ns="situbot" />
+
+  <!-- Override API key if provided -->
+  <param name="situbot/llm/api_key" value="$(arg api_key)" if="$(eval api_key != '')" />
+  <param name="situbot/evaluator_llm/api_key" value="$(arg api_key)" if="$(eval api_key != '')" />
+
+  <!-- Perception Node -->
+  <node name="situbot_perception" pkg="situbot" type="perception_node.py" output="screen">
+    <rosparam subst_value="true">
+      camera_topic: /camera/color/image_raw
+      detection_model: yolo_world
+      confidence_threshold: 0.3
+      nms_threshold: 0.5
+      min_bbox_area: 400
+      max_detections_per_class: 3
+      debug_visualization: true
+      coordinate_mapping_mode: $(arg coordinate_mapping_mode)
+      vision_config_file: $(arg vision_config_file)
+      workspace_bounds:
+        x_min: 0.15
+        x_max: 0.45
+        y_min: -0.20
+        y_max: 0.20
+      objects_file: $(arg config_dir)/objects.yaml
+    </rosparam>
+  </node>
+
+  <!-- Reasoning Node -->
+  <node name="situbot_reasoning" pkg="situbot" type="reasoning_node.py" output="screen">
+    <param name="llm/endpoint" value="$(eval optenv('DASHSCOPE_ENDPOINT', 'https://dashscope.aliyuncs.com/compatible-mode/v1'))" />
+    <param name="llm/model" value="$(arg model)" />
+    <param name="objects_file" value="$(arg config_dir)/objects.yaml" />
+    <rosparam ns="workspace" subst_value="true">
+      table:
+        x_min: 0.15
+        x_max: 0.45
+        y_min: -0.20
+        y_max: 0.20
+        z_surface: 0.02
+    </rosparam>
+  </node>
+
+  <!-- Planner Node -->
+  <node name="situbot_planner" pkg="situbot" type="planner_node.py" output="screen">
+    <param name="objects_file" value="$(arg config_dir)/objects.yaml" />
+    <rosparam ns="workspace" subst_value="true">
+      table:
+        x_min: 0.15
+        x_max: 0.45
+        y_min: -0.20
+        y_max: 0.20
+        z_surface: 0.02
+    </rosparam>
+  </node>
+
+  <!-- Executor Node (sagittarius hardware params from sgr_ctrl.py) -->
+  <node name="situbot_executor" pkg="situbot" type="executor_node.py" output="screen">
+    <rosparam subst_value="true">
+      moveit:
+        planning_group: sagittarius_arm
+        gripper_group: sagittarius_gripper
+        planning_time: 5.0
+        max_velocity_scaling: 0.5
+        max_acceleration_scaling: 0.5
+      gripper:
+        approach_height: 0.04
+        lift_height: 0.08
+      buffer_timeout: 2.0
+    </rosparam>
+  </node>
+
+  <!-- Evaluator Node -->
+  <node name="situbot_evaluator" pkg="situbot" type="evaluator_node.py" output="screen">
+    <param name="evaluator_llm/model" value="$(arg eval_model)" />
+    <param name="situbench_file" value="$(arg config_dir)/situbench.yaml" />
+    <rosparam>
+      evaluation:
+        num_candidates: 5
+    </rosparam>
+  </node>
+
+</launch>

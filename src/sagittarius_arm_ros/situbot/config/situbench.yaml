@@ -1,0 +1,188 @@
+# SituBench: Situation-Conditioned Rearrangement Benchmark
+# ========================================================
+# 30 scenarios × 3 difficulty levels
+# Each scenario uses a subset of the 15-object catalog.
+
+scenarios:
+  # ===== LEVEL 1: FUNCTIONAL (10 scenarios) =====
+  - id: F01
+    level: functional
+    situation: "A university student preparing for a final exam in 2 days"
+    objects: [textbook, notebook, highlighter_set, pen_holder, mug, water_bottle, phone, desk_lamp, snack_box]
+    notes: "Study materials prominent and open; phone face-down (no distraction); water and snacks within reach"
+
+  - id: F02
+    level: functional
+    situation: "A remote worker about to join a video call interview"
+    objects: [laptop, notebook, pen_holder, mug, water_bottle, phone, photo_frame, tissue_box]
+    notes: "Laptop centered; background tidy; notebook ready for notes; water accessible but off-camera"
+
+  - id: F03
+    level: functional
+    situation: "A child doing arts and crafts homework"
+    objects: [notebook, highlighter_set, pen_holder, snack_box, water_bottle, tissue_box, phone]
+    notes: "Art supplies spread out; protective tissue nearby; snacks as reward; phone away"
+
+  - id: F04
+    level: functional
+    situation: "A person following a recipe to cook dinner"
+    objects: [phone, notebook, pen_holder, mug, water_bottle, tissue_box, desk_lamp]
+    notes: "Phone propped up (recipe display); notebook for adjustments; everything else cleared to edges"
+
+  - id: F05
+    level: functional
+    situation: "A freelance writer working on a deadline article"
+    objects: [laptop, notebook, pen_holder, mug, water_bottle, snack_box, phone, desk_lamp]
+    notes: "Laptop centered; coffee mug close; phone silenced face-down; reference notebook open beside laptop"
+
+  - id: F06
+    level: functional
+    situation: "A person sorting and organizing their weekly mail and bills"
+    objects: [notebook, pen_holder, highlighter_set, phone, mug, desk_lamp]
+    notes: "Clear workspace with sorting zones; pen and highlighter for marking; good lighting"
+
+  - id: F07
+    level: functional
+    situation: "A student attending an online lecture and taking notes"
+    objects: [laptop, notebook, pen_holder, highlighter_set, water_bottle, mug, phone]
+    notes: "Laptop for lecture; notebook beside it; writing tools ready; phone on silent"
+
+  - id: F08
+    level: functional
+    situation: "A person packing for a business trip tomorrow morning"
+    objects: [notebook, pen_holder, phone, laptop, water_bottle, tissue_box]
+    notes: "Checklist-style: notebook open with pen; phone charging; laptop ready to pack; minimal clutter"
+
+  - id: F09
+    level: functional
+    situation: "A hobbyist reading a novel for leisure on a Sunday afternoon"
+    objects: [textbook, mug, snack_box, phone, candle, desk_lamp, photo_frame]
+    notes: "Book centered; tea/coffee and snacks within reach; phone away; cozy atmosphere items present"
+
+  - id: F10
+    level: functional
+    situation: "A person doing morning journaling and planning the day"
+    objects: [notebook, pen_holder, mug, phone, highlighter_set, water_bottle, candle]
+    notes: "Notebook centered open; pen ready; calming candle; coffee mug; phone for calendar reference"
+
+  # ===== LEVEL 2: CULTURAL / SOCIAL (10 scenarios) =====
+  - id: C01
+    level: cultural
+    situation: "Elderly Chinese grandparents visiting for the first time"
+    objects: [tea_set, mug, snack_box, photo_frame, phone, tissue_box, candle, water_bottle]
+    notes: "Tea set prominently placed (respect); photo frame showing family; snacks as welcome; warm atmosphere"
+
+  - id: C02
+    level: cultural
+    situation: "A Muslim colleague breaking fast during Ramadan"
+    objects: [water_bottle, snack_box, mug, phone, tissue_box, notebook, desk_lamp]
+    notes: "Water and dates/snacks immediately accessible (first to break fast); phone for prayer time; clean space"
+
+  - id: C03
+    level: cultural
+    situation: "A Japanese business partner visiting for a formal meeting"
+    objects: [tea_set, notebook, pen_holder, laptop, phone, water_bottle, tissue_box]
+    notes: "Tea set centered (hospitality); immaculate order; notebook aligned; no casual items visible"
+
+  - id: C04
+    level: cultural
+    situation: "Preparing a desk for a left-handed person"
+    objects: [notebook, pen_holder, highlighter_set, mug, phone, laptop, water_bottle, desk_lamp]
+    notes: "Writing tools on LEFT side; mug on left; mouse space on left; mirror-image of typical right-hand setup"
+
+  - id: C05
+    level: cultural
+    situation: "A Western friend visiting a Chinese home for dinner"
+    objects: [tea_set, wine_glass, snack_box, phone, tissue_box, candle, water_bottle]
+    notes: "Both tea set AND wine glass (cultural bridge); snacks for pre-dinner; welcoming candle"
+
+  - id: C06
+    level: cultural
+    situation: "Setting up for a group study session with 3 classmates"
+    objects: [textbook, notebook, highlighter_set, pen_holder, snack_box, water_bottle, mug, laptop]
+    notes: "Shared resources centered; individual notebooks at edges; communal snacks in middle; collaborative layout"
+
+  - id: C07
+    level: cultural
+    situation: "An Indian colleague celebrating Diwali at the office"
+    objects: [candle, snack_box, tea_set, photo_frame, desk_lamp, phone, tissue_box]
+    notes: "Candle prominent (light symbolism); sweets/snacks to share; festive warm lighting; tidy and bright"
+
+  - id: C08
+    level: cultural
+    situation: "A Korean colleague's first day at a new job"
+    objects: [notebook, pen_holder, laptop, mug, water_bottle, phone, tissue_box, desk_lamp]
+    notes: "Extremely tidy and organized; notebook ready; everything aligned; professional and respectful"
+
+  - id: C09
+    level: cultural
+    situation: "Hosting an elderly relative who has difficulty with small objects"
+    objects: [mug, water_bottle, phone, tissue_box, tea_set, snack_box, desk_lamp]
+    notes: "Large items only; well-spaced; mug with handle facing outward; good lighting; nothing fragile near edges"
+
+  - id: C10
+    level: cultural
+    situation: "A vegan friend coming over for afternoon tea"
+    objects: [tea_set, snack_box, mug, water_bottle, candle, photo_frame, tissue_box]
+    notes: "Tea set centered; fruit/vegan snacks accessible; no animal-product hints; warm welcoming setup"
+
+  # ===== LEVEL 3: EMOTIONAL / EMPATHETIC (10 scenarios) =====
+  - id: E01
+    level: emotional
+    situation: "The occupant just failed an important exam"
+    objects: [tissue_box, mug, snack_box, phone, textbook, notebook, water_bottle, photo_frame]
+    notes: "Comfort items close (tissues, warm drink, comfort food); textbooks pushed away; photo frame (support); phone accessible for calling someone"
+
+  - id: E02
+    level: emotional
+    situation: "The occupant just received a job offer from their dream company"
+    objects: [phone, laptop, mug, wine_glass, candle, notebook, pen_holder, snack_box]
+    notes: "Celebration: wine glass and candle; phone centered (sharing news); laptop open (reading offer); festive feel"
+
+  - id: E03
+    level: emotional
+    situation: "The occupant is a homesick international student on a lonely evening"
+    objects: [photo_frame, phone, mug, tissue_box, snack_box, candle, notebook, textbook]
+    notes: "Photo frame prominent (memories of home); phone for video call; warm drink; comfort items; soft lighting with candle"
+
+  - id: E04
+    level: emotional
+    situation: "The occupant's beloved pet just passed away"
+    objects: [tissue_box, photo_frame, mug, candle, phone, water_bottle, notebook]
+    notes: "Tissues most accessible; photo frame (pet memories); candle (memorial); warm drink for comfort; phone for support; notebook for writing feelings; everything else minimized"
+
+  - id: E05
+    level: emotional
+    situation: "The occupant is anxiously waiting for medical test results"
+    objects: [phone, water_bottle, tissue_box, mug, notebook, pen_holder, snack_box, candle]
+    notes: "Phone front and center (waiting for call); calming elements (candle, warm drink); water nearby; distraction items (notebook, snacks) accessible"
+
+  - id: E06
+    level: emotional
+    situation: "The occupant just had a big argument with their best friend"
+    objects: [phone, tissue_box, mug, notebook, pen_holder, snack_box, photo_frame, candle]
+    notes: "Phone nearby but not centered (conflicted about calling); tissues close; comfort food; notebook to process thoughts; photo frame might be turned away"
+
+  - id: E07
+    level: emotional
+    situation: "The occupant is feeling creative and inspired after visiting an art museum"
+    objects: [notebook, pen_holder, highlighter_set, phone, mug, candle, desk_lamp, laptop]
+    notes: "Creative workspace: notebook open and centered; colorful highlighters spread; good lighting; inspirational setup; laptop for references"
+
+  - id: E08
+    level: emotional
+    situation: "The occupant is recovering from a cold and working from home"
+    objects: [tissue_box, mug, water_bottle, laptop, phone, snack_box, notebook, desk_lamp]
+    notes: "Tissues and water VERY close; warm drink; laptop for minimal work; comfortable not optimal layout; medicine-friendly spacing"
+
+  - id: E09
+    level: emotional
+    situation: "The occupant just finished a marathon and is exhausted but proud"
+    objects: [water_bottle, phone, snack_box, mug, tissue_box, notebook, photo_frame, candle]
+    notes: "Water bottle front and center (hydration); phone (sharing achievement); energy snacks close; celebration candle; minimal effort required to reach anything"
+
+  - id: E10
+    level: emotional
+    situation: "The occupant is nervously preparing for a first date tonight"
+    objects: [phone, notebook, candle, wine_glass, mug, tissue_box, pen_holder, photo_frame]
+    notes: "Phone prominent (texting date); candle and wine glass (setting mood); notebook for jotting plans; photo frame put away (ex? or keep for confidence); mirror-check items"

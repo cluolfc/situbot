@@ -1,0 +1,27 @@
+<launch>
+  <!-- Perception only: camera + object detection -->
+  <arg name="camera_topic" default="/camera/color/image_raw" />
+  <arg name="config_dir" default="$(find situbot)/config" />
+  <arg name="coordinate_mapping_mode" default="vision_config_linear" />
+  <arg name="vision_config_file" default="$(find sagittarius_object_color_detector)/config/vision_config.yaml" />
+
+  <node name="situbot_perception" pkg="situbot" type="perception_node.py" output="screen">
+    <rosparam subst_value="true">
+      camera_topic: $(arg camera_topic)
+      detection_model: yolo_world
+      confidence_threshold: 0.3
+      nms_threshold: 0.5
+      min_bbox_area: 400
+      max_detections_per_class: 3
+      debug_visualization: true
+      coordinate_mapping_mode: $(arg coordinate_mapping_mode)
+      vision_config_file: $(arg vision_config_file)
+      workspace_bounds:
+        x_min: 0.15
+        x_max: 0.45
+        y_min: -0.20
+        y_max: 0.20
+      objects_file: $(arg config_dir)/objects.yaml
+    </rosparam>
+  </node>
+</launch>
