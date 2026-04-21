@@ -1,0 +1,6 @@
+string ground_truth_situation
+string[] candidate_situations
+---
+string predicted_situation
+float64 confidence
+string reasoning

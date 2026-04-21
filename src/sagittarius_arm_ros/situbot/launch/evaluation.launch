@@ -1,0 +1,17 @@
+<launch>
+  <!-- Evaluation only: roundtrip test node -->
+  <arg name="api_key" default="" />
+  <arg name="eval_model" default="qwen-max" />
+  <arg name="config_dir" default="$(find situbot)/config" />
+
+  <node name="situbot_evaluator" pkg="situbot" type="evaluator_node.py" output="screen">
+    <param name="evaluator_llm/endpoint" value="https://dashscope.aliyuncs.com/compatible-mode/v1" />
+    <param name="evaluator_llm/api_key" value="$(arg api_key)" />
+    <param name="evaluator_llm/model" value="$(arg eval_model)" />
+    <param name="situbench_file" value="$(arg config_dir)/situbench.yaml" />
+    <rosparam>
+      evaluation:
+        num_candidates: 5
+    </rosparam>
+  </node>
+</launch>
