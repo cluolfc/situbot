@@ -1,0 +1,67 @@
+---
+header:
+  seq: 22
+  stamp:
+    secs: 1776933286
+    nsecs:  69916473
+  frame_id: "usb_cam"
+objects:
+  -
+    instance_id: "wine_glass_01"
+    name: "wine_glass"
+    x: 0.2769808222181967
+    y: -0.11836218004293
+    z: 0.0
+    confidence: 0.3459845185279846
+    width: 0.07
+    depth: 0.07
+    height: 0.2
+    bbox_x1: 451
+    bbox_y1: 1
+    bbox_x2: 639
+    bbox_y2: 301
+    pixel_x: 545.0
+    pixel_y: 151.0
+    zone: "front-center"
+scene_description: "Detected 1 tabletop object(s). wine_glass_01 (wine_glass) at front-center [x=0.277,\
+  \ y=-0.118, z=0.000, conf=0.35]"
+spatial_relations: []
+---
+header:
+  seq: 23
+  stamp:
+    secs: 1776933286
+    nsecs: 269777110
+  frame_id: "usb_cam"
+objects:
+  -
+    instance_id: "tissue_box_01"
+    name: "tissue_box"
+    x: 0.16741648154680755
+    y: 0.07509114404271476
+    z: 0.0
+    confidence: 0.3002564609050751
+    width: 0.12
+    depth: 0.07
+    height: 0.08
+    bbox_x1: 109
+    bbox_y1: 304
+    bbox_x2: 263
+    bbox_y2: 452
+    pixel_x: 186.0
+    pixel_y: 378.0
+    zone: "front-center"
+scene_description: "Detected 1 tabletop object(s). tissue_box_01 (tissue_box) at front-center [x=0.167,\
+  \ y=0.075, z=0.000, conf=0.30]"
+spatial_relations: []
+---
+header:
+  seq: 24
+  stamp:
+    secs: 1776933286
+    nsecs: 389795474
+  frame_id: "usb_cam"
+objects: []
+scene_description: "No objects detected on the tabletop."
+spatial_relations: []
+---
