@@ -93,3 +93,35 @@ objects:
     graspable: true
     weight_class: light
     description: "Pack of 3-4 highlighter pens"
+
+  # --- Additional objects for DATE01 scenario ---
+
+  - name: dinner_plate
+    dimensions: {w: 0.25, d: 0.25, h: 0.02}
+    graspable: true
+    weight_class: medium
+    description: "Standard dinner plate"
+
+  - name: flower_vase
+    dimensions: {w: 0.10, d: 0.10, h: 0.20}
+    graspable: true
+    weight_class: medium
+    description: "Small flower vase"
+
+  - name: toy_car
+    dimensions: {w: 0.06, d: 0.12, h: 0.05}
+    graspable: true
+    weight_class: light
+    description: "Small toy car"
+
+  - name: math_textbook
+    dimensions: {w: 0.21, d: 0.28, h: 0.03}
+    graspable: true
+    weight_class: medium
+    description: "Maths textbook (A4-sized)"
+
+  - name: game_controller
+    dimensions: {w: 0.15, d: 0.10, h: 0.05}
+    graspable: true
+    weight_class: light
+    description: "Game controller / gamepad"

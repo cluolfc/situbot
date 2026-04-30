@@ -3,6 +3,9 @@
 
 Subscribes to ArrangementPlan, computes collision-free pick-place sequence,
 publishes PlannedAction messages in order.
+
+Includes workspace clamping to handle upstream reasoning modules that
+may output coordinates outside the robot's reachable workspace.
 """
 
 import rospy
@@ -75,6 +78,93 @@ class PlannerNode:
                 self.current_positions[obj.name] = (obj.x, obj.y, obj.z)
                 self.current_names[obj.name] = obj.name
 
+    def _clamp_to_workspace(self, placements):
+        """Clamp target coordinates into workspace bounds with inward margin.
+
+        Upstream reasoning modules may output coordinates in a different
+        frame (e.g. normalised [0,1] or [-1,1]).  This method detects
+        out-of-bounds placements and remaps them:
+
+        1. If ANY placement is outside bounds, check whether all coords
+           look like a normalised space (all in [0,1] or [-1,1]) and
+           remap the entire batch linearly into the workspace.
+        2. Otherwise, clamp individual outliers to the nearest edge
+           with a small inward margin so objects don't sit on the boundary.
+        """
+        b = self.workspace
+        margin = 0.03  # keep objects 3cm inside edges
+
+        x_lo, x_hi = b["x_min"] + margin, b["x_max"] - margin
+        y_lo, y_hi = b["y_min"] + margin, b["y_max"] - margin
+
+        xs = [p.x for p in placements]
+        ys = [p.y for p in placements]
+
+        any_oob = any(
+            p.x < b["x_min"] or p.x > b["x_max"] or
+            p.y < b["y_min"] or p.y > b["y_max"]
+            for p in placements
+        )
+
+        if not any_oob:
+            return placements
+
+        clamped_count = 0
+
+        # Detect normalised coordinate space: all values in [-1, 1]
+        all_normalised = (
+            all(-1.0 <= v <= 1.0 for v in xs) and
+            all(-1.0 <= v <= 1.0 for v in ys)
+        )
+
+        if all_normalised and len(placements) > 1:
+            # Linear remap from the actual value range into workspace
+            src_x_min, src_x_max = min(xs), max(xs)
+            src_y_min, src_y_max = min(ys), max(ys)
+
+            def remap(val, src_lo, src_hi, dst_lo, dst_hi):
+                if src_hi - src_lo < 1e-8:
+                    return (dst_lo + dst_hi) / 2
+                return dst_lo + (val - src_lo) / (src_hi - src_lo) * (dst_hi - dst_lo)
+
+            for p in placements:
+                old_x, old_y = p.x, p.y
+                p.x = remap(p.x, src_x_min, src_x_max, x_lo, x_hi)
+                p.y = remap(p.y, src_y_min, src_y_max, y_lo, y_hi)
+                p.z = b["z_surface"]
+                clamped_count += 1
+                rospy.loginfo(
+                    f"Remapped {p.name}: ({old_x:.3f}, {old_y:.3f}) -> "
+                    f"({p.x:.3f}, {p.y:.3f})"
+                )
+
+            rospy.logwarn(
+                f"Detected normalised coordinate space, remapped all "
+                f"{clamped_count} placements into workspace"
+            )
+        else:
+            # Hard clamp: individual outliers pulled to nearest valid point
+            for p in placements:
+                old_x, old_y = p.x, p.y
+                p.x = max(x_lo, min(x_hi, p.x))
+                p.y = max(y_lo, min(y_hi, p.y))
+                p.z = b["z_surface"]
+                if old_x != p.x or old_y != p.y:
+                    clamped_count += 1
+                    rospy.logwarn(
+                        f"Clamped {p.name}: ({old_x:.3f}, {old_y:.3f}) -> "
+                        f"({p.x:.3f}, {p.y:.3f})"
+                    )
+
+            if clamped_count:
+                rospy.logwarn(
+                    f"Clamped {clamped_count}/{len(placements)} out-of-bounds "
+                    f"placements into workspace [{b['x_min']:.2f}..{b['x_max']:.2f}] x "
+                    f"[{b['y_min']:.2f}..{b['y_max']:.2f}]"
+                )
+
+        return placements
+
     def plan_callback(self, msg: ArrangementPlan):
         """Receive an arrangement plan and compute pick-place sequence."""
         rospy.loginfo(f"Received plan for: {msg.situation[:60]}...")
@@ -90,6 +180,9 @@ class PlannerNode:
                 role=p.role,
             ))
             target_placements[-1].grounded_instance_id = p.grounded_instance_id
+
+        # Clamp/remap any out-of-bounds targets before planning
+        target_placements = self._clamp_to_workspace(target_placements)
 
         if not self.current_positions:
             rospy.logwarn("No current positions from perception, using spread defaults")

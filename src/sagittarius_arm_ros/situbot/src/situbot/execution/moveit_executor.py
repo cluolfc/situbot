@@ -69,21 +69,29 @@ class MoveItExecutor:
 
         moveit_commander.roscpp_initialize(sys.argv)
 
-        self.arm_group = moveit_commander.MoveGroupCommander(self.planning_group)
+        self.arm_group = moveit_commander.MoveGroupCommander(
+            self.planning_group,
+            robot_description="/sgr532/robot_description",
+            ns="/sgr532"
+        )
         self.arm_group.allow_replanning(False)
         self.arm_group.set_goal_position_tolerance(self.position_tolerance)
         self.arm_group.set_goal_orientation_tolerance(self.orientation_tolerance)
         self.arm_group.set_max_acceleration_scaling_factor(self.max_acceleration_scaling)
         self.arm_group.set_max_velocity_scaling_factor(self.max_velocity_scaling)
 
-        self.reference_frame = rospy.get_namespace()[1:] + 'base_link'
+        self.reference_frame = "sgr532/base_link"
         self.arm_group.set_pose_reference_frame(self.reference_frame)
 
-        self.gripper_group = moveit_commander.MoveGroupCommander(self.gripper_group_name)
+        self.gripper_group = moveit_commander.MoveGroupCommander(
+            self.gripper_group_name,
+            robot_description="/sgr532/robot_description",
+            ns="/sgr532"
+        )
         self.gripper_group.set_pose_reference_frame(self.reference_frame)
         self.gripper_group.set_goal_joint_tolerance(0.001)
 
-        self.scene = moveit_commander.PlanningSceneInterface()
+        self.scene = moveit_commander.PlanningSceneInterface(ns="/sgr532")
         rospy.sleep(0.5)
 
         ee_link = self.arm_group.get_end_effector_link()
@@ -292,14 +300,15 @@ class MoveItExecutor:
 
     def _is_plan_success(self, x: float, y: float, z: float,
                         roll: float, pitch: float, yaw: float) -> bool:
-        import rospy
+        """Check if a valid motion plan exists (does NOT move the arm)."""
         pose = self._make_pose(x, y, z, roll, pitch, yaw)
         self.arm_group.set_pose_target(pose)
-        success = self.arm_group.go(wait=True)
-        self.arm_group.stop()
+        plan = self.arm_group.plan()
         self.arm_group.clear_pose_targets()
-        rospy.sleep(0.1)
-        return success
+        # MoveIt plan() returns (success, plan, ...) tuple in newer API
+        if isinstance(plan, tuple):
+            return plan[0]  # bool success flag
+        return len(plan.joint_trajectory.points) != 0
 
     def _move_to_pose_euler(self, x: float, y: float, z: float,
                             roll: float, pitch: float, yaw: float,
