@@ -33,14 +33,33 @@ class ExecutorNode:
     def __init__(self):
         rospy.init_node("situbot_executor", anonymous=False)
 
+        def _get_param_with_global_fallback(private_key, global_key, default):
+            if rospy.has_param(private_key):
+                return rospy.get_param(private_key)
+            if rospy.has_param(global_key):
+                return rospy.get_param(global_key)
+            return default
+
         # Load params (matched to sagittarius hardware)
-        planning_group = rospy.get_param("~moveit/planning_group", "sagittarius_arm")
-        gripper_group = rospy.get_param("~moveit/gripper_group", "sagittarius_gripper")
-        planning_time = rospy.get_param("~moveit/planning_time", 5.0)
-        max_vel = rospy.get_param("~moveit/max_velocity_scaling", 0.5)
-        max_acc = rospy.get_param("~moveit/max_acceleration_scaling", 0.5)
+        planning_group = _get_param_with_global_fallback(
+            "~moveit/planning_group", "moveit/planning_group", "sagittarius_arm"
+        )
+        gripper_group = _get_param_with_global_fallback(
+            "~moveit/gripper_group", "moveit/gripper_group", "sagittarius_gripper"
+        )
+        planning_time = _get_param_with_global_fallback(
+            "~moveit/planning_time", "moveit/planning_time", 5.0
+        )
+        max_vel = _get_param_with_global_fallback(
+            "~moveit/max_velocity_scaling", "moveit/max_velocity_scaling", 0.5
+        )
+        max_acc = _get_param_with_global_fallback(
+            "~moveit/max_acceleration_scaling", "moveit/max_acceleration_scaling", 0.5
+        )
         approach_h = rospy.get_param("~gripper/approach_height", 0.04)
         lift_h = rospy.get_param("~gripper/lift_height", 0.08)
+        self.start_pose = rospy.get_param("~moveit/start_pose", "home")
+        self.recovery_pose = rospy.get_param("~moveit/recovery_pose", self.start_pose)
 
         self.executor = MoveItExecutor(
             planning_group=planning_group,
@@ -52,6 +71,9 @@ class ExecutorNode:
             lift_height=lift_h,
         )
         self.executor.initialize()
+        rospy.loginfo(
+            f"Executor poses: start_pose='{self.start_pose}', recovery_pose='{self.recovery_pose}'"
+        )
 
         # Load object catalog for dimension lookups
         objects_file = rospy.get_param("~objects_file", "")
@@ -130,6 +152,13 @@ class ExecutorNode:
     def execute_buffered(self, event=None):
         """Execute all buffered actions in sequence order."""
         if not self._executing.acquire(blocking=False):
+            # Scene updates may briefly hold this lock; retry so buffered actions
+            # are not dropped if timer fires during an objects callback.
+            rospy.Timer(
+                rospy.Duration(0.2),
+                self.execute_buffered,
+                oneshot=True,
+            )
             return
         try:
             self._execute_buffered_inner()
@@ -146,9 +175,25 @@ class ExecutorNode:
 
         rospy.loginfo(f"Executing {len(actions)} actions...")
 
-        rospy.loginfo("Safety: releasing gripper and moving to home...")
-        self.executor._gripper_open()
-        self.executor.go_home()
+        start_pose = getattr(self, "start_pose", "home")
+        recovery_pose = getattr(self, "recovery_pose", start_pose)
+
+        rospy.loginfo(f"Safety: releasing gripper and moving to start pose '{start_pose}'...")
+        if not self.executor._gripper_open():
+            # On real hardware this can be false even when jaws are already open.
+            # Do not abort solely on this signal; verify via start-pose move result.
+            rospy.logwarn(
+                "Safety step warning: gripper open command returned false; "
+                "continuing to start-pose check"
+            )
+        if not self._go_pose(start_pose):
+            self._log_planning_diagnostics(f"safety_move_to_{start_pose}")
+            rospy.logerr(
+                f"Safety step failed: unable to reach start pose '{start_pose}', "
+                "aborting current action batch"
+            )
+            rospy.loginfo(f"Execution complete: 0 succeeded, {len(actions)} failed")
+            return
 
         success_count = 0
         fail_count = 0
@@ -183,11 +228,32 @@ class ExecutorNode:
             else:
                 fail_count += 1
                 rospy.logwarn(f"Action failed: {action.action_type} {label}, "
-                              "returning to home and continuing")
-                self.executor.go_home()
+                              f"returning to '{recovery_pose}' and continuing")
+                if not self._go_pose(recovery_pose):
+                    self._log_planning_diagnostics(
+                        f"recovery_after_{action.action_type}_{obj_id}"
+                    )
 
-        self.executor.go_home()
+        self._go_pose(recovery_pose)
         rospy.loginfo(f"Execution complete: {success_count} succeeded, {fail_count} failed")
+
+    def _go_pose(self, pose_name: str):
+        """Move to a named pose, with compatibility fallback for test doubles."""
+        if hasattr(self.executor, "go_named_pose"):
+            return self.executor.go_named_pose(pose_name)
+        if pose_name == "home" and hasattr(self.executor, "go_home"):
+            return self.executor.go_home()
+        rospy.logwarn(f"Executor missing pose API for '{pose_name}', skipping move")
+        return False
+
+    def _log_planning_diagnostics(self, context: str):
+        """Emit compact diagnostics to help triage runtime planning/collision failures."""
+        scene_count = len(getattr(self.executor, "_scene_objects", {}) or {})
+        rospy.logwarn(
+            f"[diagnostics] context={context}, scene_obstacles={scene_count}, "
+            f"start_pose='{getattr(self, 'start_pose', 'home')}', "
+            f"recovery_pose='{getattr(self, 'recovery_pose', getattr(self, 'start_pose', 'home'))}'"
+        )
 
 
 if __name__ == "__main__":
