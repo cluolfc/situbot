@@ -2,6 +2,13 @@
 
 A ROS (Noetic) package that rearranges tabletop objects to reflect a described human situation, using LLM reasoning and a 6-DOF sagittarius arm.
 
+## Qualcomm Device Code
+
+The Qualcomm device code is the same as the main source code in `/src`.  
+The system is deployed and executed on the Radxa Airbox Q900 / RB8 device using the launch files, scripts, and configuration files under `/src`.
+
+No separate Qualcomm-device-specific code directory is needed because the RB8 version uses the same codebase as the main implementation.
+
 ## Architecture
 
 Five ROS nodes form a linear pipeline:
